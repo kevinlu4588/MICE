@@ -1,4 +1,11 @@
-.ipynb_checkpoints
-__pycache__
-esd-models
-esd-images
+.ipynb_checkpoints/
+__pycache__/
+esd-models/
+esd-images/
+*.png
+*.jpg
+*.log
+*.json
+*.safetensors
+*.pt
+*.txt

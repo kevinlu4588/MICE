@@ -1,82 +1,88 @@
-# Erasing Concepts from Diffusion Models
-###  [Project Website](https://erasing.baulab.info) | [Arxiv Preprint](https://arxiv.org/pdf/2303.07345.pdf) | [Fine-tuned Weights](https://erasing.baulab.info/weights/esd_models/) | [Demo](https://huggingface.co/spaces/baulab/Erasing-Concepts-In-Diffusion) <br>
+# Concept Erasure Project
 
-### Updated code 🚀 - Now support diffusers!! (Faster and cleaner)
+This project implements various methods for erasing concepts from Stable Diffusion models, with a focus on inpainting erasure techniques.
 
-<div align='center'>
-<img src = 'images/applications.png'>
-</div>
+## Project Structure
 
-## Code Update 🚀
-We are releasing a cleaner code for ESD with diffusers support. Compared to our old-code this version uses almost half the GPU memory and is 5-8 times faster. Because of this diffusers support - we believe it allows to generalise to latest models (FLUX ESD coming soon ... ) <br>
+```
+.
+├── models/                      # Trained models (indexed by number)
+├── evaluation_results/          # Results from model evaluations
+├── training_images/             # Generated training data for concepts
+├── datasets/                    # Dataset storage
+├── archive/                     # Old/unused files
+│
+├── evaluation/
+│   ├── evaluate_erased_model.py # Evaluation script for erased models
+│   ├── evaluate_latest.sh       # Evaluate the most recent model
+│   └── evaluate_dynamic.sh      # Evaluate with custom parameters
+│
+├── inpainting_erasure/
+│   ├── train_inpainting_erasure.py  # Main training script
+│   └── run_inpainting_erasure.sh    # Run training script
+│
+├── utils/
+│   ├── models.json              # Registry of all trained models
+│   ├── generate_training_data.py    # Generate training images
+│   └── generate_all_training_data.sh# Generate all training data
+│
+├── test_model.ipynb            # Notebook for testing models
+├── README.md                   # This file
+└── CLAUDE.md                   # Project-specific instructions
+```
 
-To use the older version please visit our [older commit](https://github.com/rohitgandikota/erasing/tree/a2189e9ae677aca22a00c361bde25d3d320d8a61)
+## Quick Start
 
-## Installation Guide
-We recently updated our codebase to be much more cleaner and faster. The setup is also simple
+### 1. Generate Training Data
 ```bash
-git clone https://github.com/rohitgandikota/erasing.git
-cd erasing
-pip install -r requirements.txt
+cd utils/
+./generate_all_training_data.sh
 ```
 
-## Training Guide
-
-### SDv1.4
-After installation, follow these instructions to train a custom ESD model for Stable Diffusion V1.4. Pick from following `'xattn'`,`'noxattn'`, `'selfattn'`, `'full'`:
-```python
-python esd_sd.py --erase_concept 'Van Gogh' --train_method 'xattn'
+### 2. Train a Model
+```bash
+cd inpainting_erasure/
+./run_inpainting_erasure.sh
 ```
 
-💡 New application: You can now erase an attribute from a concept!! Instead of erasing a whole concept you can just precisely remove some of its attributes. For example, you can erase hats from cowboys but keep the rest intact!
-```python
-python esd_sd.py --erase_concept 'cowboy hat' --erase_from 'cowboy' --train_method 'xattn'
+### 3. Evaluate a Model
+```bash
+cd evaluation/
+
+# Evaluate the latest model
+./evaluate_latest.sh
+
+# Or evaluate a specific model
+./evaluate_dynamic.sh ../models/3_inpainting_erasure_van_gogh "van gogh"
 ```
 
-### SDXL
-After installation, follow these instructions to train a custom ESD model for Stable Diffusion V1.4. Pick from following `'esd-x'`, `'esd-x-strict'` (NOTE: `'esd-u'` is currently experimental and might produce unexpected artifacts):
-```python
-python esd_sdxl.py --erase_concept 'Van Gogh' --train_method 'esd-x-strict'
-```
-The optimization process for erasing undesired visual concepts from pre-trained diffusion model weights involves using a short text description of the concept as guidance. The ESD model is fine-tuned with the conditioned and unconditioned scores obtained from frozen SD model to guide the output away from the concept being erased. The model learns from it's own knowledge to steer the diffusion process away from the undesired concept.
-<div align='center'>
-<img src = 'images/ESD.png'>
-</div>
+### 4. Test Models Interactively
+Open `test_model.ipynb` in Jupyter to interactively test models.
 
-## Generating Images
+## Concepts Available
+- picasso
+- andy warhol  
+- english springer spaniel
+- airliner
+- chainsaw
+- golf ball
 
-Generating images from custom ESD model is super easy. Please follow `notebook/esd_inference_sdxl.ipynb` notebook
+## Model Registry
+All trained models are tracked in `models.json` with incremental indices.
 
-For an automated script to generate a ton of images for your evaluations use our evalscripts
-```python
-python evalscripts/generate-images.py --base_model 'stabilityai/stable-diffusion-xl-base-1.0' --esd_path 'esd-models/sdxl/esd-kelly-from-kelly.safetensors' --num_images 1 --prompts_path 'data/kelly_prompts.csv' --num_inference_steps 20 --guidance_scale 7
-```
+## Key Directories
 
-### UPDATE (NudeNet)
-If you want to recreate the results from our paper on NSFW task - please use this https://drive.google.com/file/d/1J_O-yZMabmS9gBA2qsFSrmFoCl7tbFgK/view?usp=sharing
+### `original_esd/`
+Original ESD (Erasing Stable Diffusion) implementation files.
 
-* Untar this file and save it in the homedirectory '~/.NudeNet'
-* This should enable the right results as we use this checkpoint for our analysis.
+### `inpainting_erasure/`
+Core inpainting erasure method implementations.
 
-## Running Gradio Demo Locally
+### `gradient_ascent_erasure/`
+Gradient ascent based erasure implementations.
 
-To run the gradio interactive demo locally, clone the files from [demo repository](https://huggingface.co/spaces/baulab/Erasing-Concepts-In-Diffusion/tree/main) <br>
+### `evaluation/`
+Comprehensive evaluation tools for analyzing erasure effectiveness.
 
-* Create an environment using the packages included in the requirements.txt file
-* Run `python app.py`
-* Open the application in browser at `http://127.0.0.1:7860/`
-* Train, evaluate, and save models using our method
-
-## NOTE ON LICENSE
-The code and methods behind our work have been released under MIT. However, the models that you use our methods with, might be on a different licenses. Please read the model's license (the model you are using) carefully for more details. 
-
-## Citing our work
-The preprint can be cited as follows
-```
-@inproceedings{gandikota2023erasing,
-  title={Erasing Concepts from Diffusion Models},
-  author={Rohit Gandikota and Joanna Materzy\'nska and Jaden Fiotto-Kaufman and David Bau},
-  booktitle={Proceedings of the 2023 IEEE International Conference on Computer Vision},
-  year={2023}
-}
-```
+## Architecture
+Built on Stable Diffusion v1.4 with cross-attention layer modifications using gradient ascent and inpainting techniques.
